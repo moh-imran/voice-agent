@@ -1,0 +1,28 @@
+telephony: twilio
+speech: whisper
+crm: salesforce
+commerce: magento
+ticketing: zendesk
+
+languages:
+  - code: en-US
+    name: English (US)
+    sttProvider: whisper
+    ttsProvider: whisper
+    ttsVoiceId: nova
+    promptTemplate: system.en-US
+
+llm:
+  model: gpt-4o
+  max_tokens: 1000
+  temperature: 0.3
+
+redis:
+  url: redis://localhost:6379
+
+skills: 
+  - auth
+  - order_tracking
+  - complaint
+  - faq
+  - handoff
