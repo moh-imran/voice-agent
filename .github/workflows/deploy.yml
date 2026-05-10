@@ -24,7 +24,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             mkdir -p /home/deploy/voice-agent
-            chmod 777 /home/deploy/voice-agent
 
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@v0.1.3
