@@ -27,7 +27,8 @@ class ConversationLoop:
             entities=session.entities,
             turnHistory=session.turnHistory,
             authState=session.authState,
-            customerId=session.customerId
+            customerId=session.customerId,
+            activeSkill=session.activeSkill
         )
 
         # 2. Classify intent
@@ -38,6 +39,13 @@ class ConversationLoop:
 
         intent_result = await self.intent_classifier.classify(utterance, context, available_intents)
         
+        from app.core.events import emit_event
+        await emit_event("intent_detected", {
+            "intent": intent_result.intent,
+            "confidence": intent_result.confidence,
+            "utterance": utterance
+        })
+
         logger.info("Intent classified", extra={
             "callId": call_id,
             "intent": intent_result.intent,
@@ -112,7 +120,7 @@ class ConversationLoop:
         # 5. Execute skill
         try:
             logger.info("Executing skill", extra={"callId": call_id, "skill": target_skill.name})
-            response = await target_skill.execute(context)
+            response = await target_skill.execute(context, intent_result)
             
             if response.sessionPatch or response.nextSkill is not None:
                 patch = response.sessionPatch or {}

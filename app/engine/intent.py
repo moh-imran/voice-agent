@@ -10,18 +10,21 @@ class IntentClassifier:
 
     async def classify(self, utterance: str, context: ConversationContext, available_intents: List[str]) -> IntentResult:
         prompt = f"""
-You are an intent classification engine for a voice agent.
-Analyze the user's utterance and extract the following:
-- "intent": Best matching intent from this list: [{', '.join(available_intents)}, "unknown"]
-- "confidence": A number between 0.0 and 1.0 representing your confidence.
-- "entities": A key-value object of extracted entities (e.g. orderId, sku, etc).
-- "language": The ISO code of the language spoken (e.g. en-US, ar-SA, ur).
+You are an intent classification engine for "Congni", a professional voice agent.
+Analyze the user's utterance and extract the following in JSON format:
+- "intent": Best matching intent from this list: [{', '.join(available_intents)}, "thank_you", "goodbye", "unknown"]
+- "confidence": A number between 0.0 and 1.0.
+- "entities": A key-value object (e.g. orderId, phone, otp, sku).
+- "language": ISO code (e.g. en-US).
 
-Current Session Context:
-Language: {context.language}
-Known Entities: {json.dumps(context.entities)}
+CONTEXTUAL RULES:
+1. If the current active skill is "auth" and the user says only numbers, treat them as "phone" or "otp".
+2. If the user is polite (greeting, thanks, bye), map to those intents.
 
-User Utterance: "{utterance}"
+Current Session State:
+- Active Skill: {context.activeSkill or "None"}
+- Known Entities: {json.dumps(context.entities)}
+- User Utterance: "{utterance}"
         """
 
         try:

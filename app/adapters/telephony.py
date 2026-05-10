@@ -40,3 +40,21 @@ class TwilioAdapter(TelephonyAdapter):
 
     def onDTMF(self, handler: Callable[[str], None]) -> None:
         print("[Twilio] <Gather> registered.")
+class TelnyxAdapter(TelephonyAdapter):
+    async def initCall(self, callId: str, metadata: CallMetadata) -> None:
+        print(f"[Telnyx] Call control started {callId}. From: {metadata.ani}")
+
+    async def streamAudio(self) -> AsyncIterable[AudioChunk]:
+        yield AudioChunk(data=b'mock telnyx rtp')
+
+    async def sendAudio(self, audio: bytes) -> None:
+        print(f"[Telnyx] Sending {len(audio)} bytes via Media Streaming")
+
+    async def transfer(self, agentId: str, contextSummary: str) -> None:
+        print(f"[Telnyx] Transferring call to {agentId}")
+
+    async def hangup(self, callId: str) -> None:
+        print(f"[Telnyx] Hanging up {callId}")
+
+    def onDTMF(self, handler: Callable[[str], None]) -> None:
+        print("[Telnyx] DTMF gathering active.")

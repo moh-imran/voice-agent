@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Any
 from app.core.interfaces import CommerceAdapter
 from app.core.schemas import Order, Product, Cart, OrderItem
+from app.core.events import emit_event
 
 class MagentoAdapter(CommerceAdapter):
     async def getOrder(self, id: str) -> Order:
@@ -44,10 +45,17 @@ class ShopifyAdapter(CommerceAdapter):
 
     async def placeOrder(self, cart: Cart) -> Order:
         print(f"[Shopify] POST /admin/api/orders.json")
-        return await self.getOrder("SHP-777")
+        order = await self.getOrder("SHP-777")
+        await emit_event("order_placed", {
+            "orderId": order.id,
+            "amount": order.amount,
+            "customer": cart.customerId
+        })
+        return order
 
     async def cancelOrder(self, id: str) -> None:
         print(f"[Shopify] POST /admin/api/orders/{id}/cancel.json")
+        await emit_event("order_cancelled", {"orderId": id})
 
     async def getReturns(self, customerId: str) -> List[Any]:
         return []

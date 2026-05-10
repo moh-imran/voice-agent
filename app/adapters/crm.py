@@ -1,6 +1,7 @@
 from typing import Optional
 from app.core.interfaces import CRMAdapter
 from app.core.schemas import Customer, CaseInput
+from app.core.events import emit_event
 
 class SalesforceAdapter(CRMAdapter):
     async def getCustomer(self, id: str) -> Customer:
@@ -28,7 +29,9 @@ class HubSpotAdapter(CRMAdapter):
     async def searchCustomer(self, phone: str) -> Optional[Customer]:
         print(f"[HubSpot] POST /crm/v3/objects/contacts/search")
         if phone == "0000": return None
-        return Customer(id="HS-CONT-999", name="Jane Smith", phone=phone)
+        customer = Customer(id="HS-CONT-999", name="Jane Smith", phone=phone)
+        await emit_event("crm_lookup", {"phone": phone, "result": "found", "name": customer.name})
+        return customer
 
     async def createCase(self, data: CaseInput) -> dict:
         print(f"[HubSpot] POST /crm/v3/objects/tickets")

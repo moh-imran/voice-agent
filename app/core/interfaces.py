@@ -118,5 +118,5 @@ class SkillPlugin(ABC):
         pass
 
     @abstractmethod
-    async def execute(self, context: ConversationContext) -> SkillResponse:
+    async def execute(self, context: ConversationContext, intent: IntentResult) -> SkillResponse:
         pass

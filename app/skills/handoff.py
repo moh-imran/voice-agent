@@ -15,7 +15,7 @@ class HandoffSkill(SkillPlugin):
     def canHandle(self, intent: IntentResult) -> bool:
         return intent.intent in self.getIntents()
 
-    async def execute(self, context: ConversationContext) -> SkillResponse:
+    async def execute(self, context: ConversationContext, intent: IntentResult) -> SkillResponse:
         telephony = self.registry.resolve_telephony("twilio") # Hardcoded for demo, normally from config
 
         summary = f"Customer ID: {context.customerId}. Language: {context.language}."

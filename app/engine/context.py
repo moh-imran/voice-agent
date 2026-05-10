@@ -30,7 +30,15 @@ class ContextManager:
             if not redis_url:
                 raise ValueError("Must provide redis_url for initialization")
             cls._instance = super(ContextManager, cls).__new__(cls)
-            cls._instance.redis = redis.from_url(redis_url, decode_responses=True)
+            try:
+                # Try real redis first
+                cls._instance.redis = redis.from_url(redis_url, decode_responses=True)
+                cls._instance.redis.ping()
+                print(f"Connected to Redis at {redis_url}")
+            except (redis.ConnectionError, redis.TimeoutError):
+                import fakeredis
+                print(f"Failed to connect to Redis at {redis_url}. Falling back to fakeredis for local testing.")
+                cls._instance.redis = fakeredis.FakeStrictRedis(decode_responses=True)
         return cls._instance
 
     @classmethod
@@ -58,7 +66,18 @@ class ContextManager:
         existing = self.get_session(callId)
         if existing:
             data = existing.to_dict()
-            data.update(patch)
+            
+            # Deep merge entities if present in patch
+            if "entities" in patch and isinstance(patch["entities"], dict):
+                existing_entities = data.get("entities", {})
+                data["entities"] = {**existing_entities, **patch["entities"]}
+                # Remove entities from patch to avoid overwriting during update
+                patch_copy = patch.copy()
+                del patch_copy["entities"]
+                data.update(patch_copy)
+            else:
+                data.update(patch)
+                
             session = Session(**data)
         else:
             session = self.create_session(callId, patch)

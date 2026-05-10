@@ -73,3 +73,12 @@ class PluginRegistry:
 
     def get_all_skills(self) -> list[SkillPlugin]:
         return list(self._skills.values())
+
+    def get_all_crms(self) -> list[CRMAdapter]:
+        return list(self._crm_adapters.values())
+
+    def get_all_commerce(self) -> list[CommerceAdapter]:
+        return list(self._commerce_adapters.values())
+
+    def get_all_telephony(self) -> list[TelephonyAdapter]:
+        return list(self._telephony_adapters.values())

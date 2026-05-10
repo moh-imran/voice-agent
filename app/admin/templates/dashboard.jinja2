@@ -2,69 +2,579 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Voice Agent Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Agent | Intelligence Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
-        h1, h2 { color: #333; }
-        .stats-grid { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; }
-        .stat-card h3 { margin: 0 0 10px 0; font-size: 14px; color: #666; }
-        .stat-card .value { font-size: 24px; font-weight: bold; color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; color: #333; }
-        tr:hover { background-color: #f1f1f1; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        .badge.verified { background-color: #d4edda; color: #155724; }
-        .badge.anonymous { background-color: #fff3cd; color: #856404; }
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.025em; }
+        .logo-text { background: linear-gradient(to right, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 48px; }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 16px;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover { transform: translateY(-4px); }
+        .stat-card h3 { font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+        .stat-card .value { font-size: 2.5rem; font-weight: 700; color: #fff; }
+
+        .table-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: rgba(0,0,0,0.2); text-align: left; padding: 16px 24px; font-size: 0.875rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        td { padding: 16px 24px; border-top: 1px solid var(--border); font-size: 0.95rem; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .badge.verified { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge.anonymous { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        .call-id { font-family: monospace; color: var(--primary); font-weight: 600; }
+        .time { color: var(--text-muted); font-size: 0.85rem; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>Voice Agent <span class="logo-text">Engine</span></h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="status">
+                    <span class="badge verified">● System Online</span>
+                </div>
+                <a href="/admin/logout" style="text-decoration: none; font-size: 0.875rem; color: var(--text-muted); padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; background: rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.2)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='var(--text-muted)'; this.style.borderColor='var(--border)';">Logout</a>
+            </div>
+        </header>
 
-    <h1>Voice Agent Admin Dashboard</h1>
-    
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Recent Calls</h3>
-            <div class="value">{{ total_calls }}</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Live Sessions</h3>
+                <div class="value">{{ total_calls }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Error Rate</h3>
+                <div class="value">{{ (fallbacks / total_calls * 100 if total_calls > 0 else 0) | round(1) }}%</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Intelligence</h3>
+                <div class="value">GPT-4o</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Total Fallbacks</h3>
-            <div class="value">{{ fallbacks }}</div>
-        </div>
+
+        <section style="margin-bottom: 48px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-weight: 600;">Voice Intelligence Simulator</h2>
+                <div id="status-indicator" class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">Ready</div>
+            </div>
+            
+            <div class="stat-card" style="display: flex; flex-direction: column; align-items: center; padding: 40px; text-align: center;">
+                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+                    <div id="mic-button" style="width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </div>
+                    <div id="hangup-button" style="width: 50px; height: 50px; background: #ef4444; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; opacity: 0.8;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="23" y1="1" x2="1" y2="23"></line></svg>
+                    </div>
+                </div>
+                <p id="mic-text" style="color: var(--text-muted); margin-bottom: 20px;">Click to speak to the agent</p>
+                
+                <div id="transcript-area" style="width: 100%; display: none;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; margin-top: 20px; text-align: left;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">User (Transcribed)</div>
+                        <div id="user-text" style="font-size: 1.1rem; color: #fff; margin-bottom: 16px;">...</div>
+                        
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Agent Response</div>
+                        <div id="agent-text" style="font-size: 1.1rem; color: var(--primary); font-weight: 600;">...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: 48px;">
+            <h2 style="margin-bottom: 24px; font-weight: 600;">Live Event Feed</h2>
+            <div id="event-feed" class="table-container" style="max-height: 300px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                {% if events %}
+                    {% for event in events %}
+                        <div class="event-item" data-type="{{ event.type }}" data-payload='{{ event.data | tojson }}' data-time="{{ event.timestamp }}">
+                            <!-- Rendered by JS on load -->
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;">
+                        Waiting for system events...
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section>
+            <h2 style="margin-bottom: 24px; font-weight: 600;">Recent Call Activity</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>Identity</th>
+                            <th>Status</th>
+                            <th>Intent / Skill</th>
+                            <th>Turns</th>
+                            <th>Time Started</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td><span class="call-id">{{ session.callId[:8] }}...</span></td>
+                            <td>{{ session.callerId }}</td>
+                            <td><span class="badge {{ session.authState }}">{{ session.authState }}</span></td>
+                            <td>{{ session.activeSkill or "Routing..." }}</td>
+                            <td>{{ session.turnHistory | length }}</td>
+                            <td class="time">{{ session.startedAt.split('T')[1][:8] }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 48px; color: var(--text-muted);">
+                                No session data detected. Waiting for incoming calls...
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <h2>Live Sessions</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Call ID</th>
-                <th>Caller</th>
-                <th>Language</th>
-                <th>Auth State</th>
-                <th>Active Skill</th>
-                <th>Turns</th>
-                <th>Started At</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for session in sessions %}
-            <tr>
-                <td>{{ session.callId }}</td>
-                <td>{{ session.callerId }}</td>
-                <td>{{ session.language }}</td>
-                <td><span class="badge {{ session.authState }}">{{ session.authState }}</span></td>
-                <td>{{ session.activeSkill or "None" }}</td>
-                <td>{{ session.turnHistory | length }}</td>
-                <td>{{ session.startedAt }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7" style="text-align: center;">No active sessions found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let isLiveMode = false;
+        let isAgentSpeaking = false;
+        const callId = 'sim-' + Math.random().toString(36).substring(7);
 
+        // VAD Variables
+        let audioContext;
+        let analyser;
+        let microphone;
+        let javascriptNode;
+        const SILENCE_THRESHOLD = 0.01; // Sensitivity
+        const SILENCE_DURATION = 1500;  // ms of silence before auto-stop
+        let silenceStart = null;
+
+        const micButton = document.getElementById('mic-button');
+        const micText = document.getElementById('mic-text');
+        const statusIndicator = document.getElementById('status-indicator');
+        const transcriptArea = document.getElementById('transcript-area');
+        const userText = document.getElementById('user-text');
+        const agentText = document.getElementById('agent-text');
+
+        // Add Live Mode Toggle UI
+        const toggleContainer = document.createElement('div');
+        toggleContainer.style.cssText = 'margin-top: 15px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;';
+        toggleContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="live-mode" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="live-mode" style="color: var(--text-muted); cursor: pointer; font-size: 0.9rem;">Hands-Free Mode (Auto-listen)</label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="turbo-mode" checked style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="turbo-mode" style="color: var(--success); cursor: pointer; font-size: 0.9rem; font-weight: 600;">Turbo Mode (Fast Local STT)</label>
+            </div>
+        `;
+        micText.parentNode.insertBefore(toggleContainer, micText.nextSibling);
+
+        const liveModeCheckbox = document.getElementById('live-mode');
+        const turboModeCheckbox = document.getElementById('turbo-mode');
+        
+        liveModeCheckbox.addEventListener('change', (e) => {
+            isLiveMode = e.target.checked;
+            if (isLiveMode && !isRecording && !isAgentSpeaking) {
+                startRecording();
+            }
+        });
+
+        // Add Pulse Style
+        const pulseStyle = document.createElement("style");
+        pulseStyle.innerText = `
+            @keyframes pulse-red {
+                0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            }
+            .pulse-active { animation: pulse-red 2s infinite; }
+        `;
+        document.head.appendChild(pulseStyle);
+
+        // Speech Recognition Setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                console.log("Local STT:", text);
+                sendTextToAgent(text);
+            };
+            
+            recognition.onend = () => {
+                if (isRecording && turboModeCheckbox.checked) {
+                    stopRecording();
+                }
+            };
+        }
+
+        const hangupButton = document.getElementById('hangup-button');
+
+        hangupButton.onclick = () => {
+            if (isRecording) stopRecording();
+            isLiveMode = false;
+            liveModeCheckbox.checked = false;
+            statusIndicator.innerText = 'Call Terminated';
+            statusIndicator.style.color = 'var(--text-muted)';
+            micText.innerText = 'Click mic to start a new call';
+            hangupButton.style.display = 'none';
+        };
+
+        async function startRecording() {
+            if (isRecording || isAgentSpeaking) return;
+            
+            try {
+                if (turboModeCheckbox.checked && recognition) {
+                    try { recognition.start(); } catch(e) { console.warn("Recognition already started"); }
+                } else {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    if (isLiveMode) setupVAD(stream);
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => sendToAgentAudio(new Blob(audioChunks, { type: 'audio/mpeg' }));
+                    mediaRecorder.start();
+                }
+
+                isRecording = true;
+                hangupButton.style.display = 'flex';
+                micButton.style.background = '#ef4444';
+                micButton.style.transform = 'scale(1.1)';
+                micButton.classList.add('pulse-active');
+                micText.innerText = isLiveMode ? 'Listening...' : 'Listening... Click to send';
+                statusIndicator.innerText = 'Recording';
+                statusIndicator.style.color = '#ef4444';
+            } catch (err) {
+                console.error(err);
+                micText.innerText = 'Error starting mic.';
+                isRecording = false;
+            }
+        }
+
+        async function sendTextToAgent(text) {
+            if (!text || text.trim() === "") return;
+            
+            userText.innerText = text;
+            transcriptArea.style.display = 'block';
+            statusIndicator.innerText = 'Thinking';
+            statusIndicator.style.color = '#f59e0b';
+            micText.innerText = 'Processing...';
+
+            try {
+                const response = await fetch(`/debug/turn`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ callId, utterance: text })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Now synthesize only
+                    const ttsResponse = await fetch(`/admin/tts?text=${encodeURIComponent(data.text)}`);
+                    handleAgentResponse(ttsResponse, text, data.text, data.endCall, data.nextSkill);
+                } else {
+                    statusIndicator.innerText = 'Error';
+                    micText.innerText = 'Server error.';
+                }
+            } catch (err) {
+                console.error(err);
+                statusIndicator.innerText = 'Error';
+                micText.innerText = 'Connection error.';
+            }
+        }
+
+        function setupVAD(stream) {
+            audioContext = new AudioContext();
+            analyser = audioContext.createAnalyser();
+            microphone = audioContext.createMediaStreamSource(stream);
+            javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+            analyser.smoothingTimeConstant = 0.8;
+            analyser.fftSize = 1024;
+
+            microphone.connect(analyser);
+            analyser.connect(javascriptNode);
+            javascriptNode.connect(audioContext.destination);
+
+            javascriptNode.onaudioprocess = () => {
+                const array = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(array);
+                let values = 0;
+
+                const length = array.length;
+                for (let i = 0; i < length; i++) {
+                    values += array[i];
+                }
+
+                const average = values / length;
+                const normalized = average / 255;
+
+                if (normalized < SILENCE_THRESHOLD) {
+                    if (silenceStart === null) silenceStart = Date.now();
+                    else if (Date.now() - silenceStart > SILENCE_DURATION) {
+                        silenceStart = null;
+                        stopRecording();
+                    }
+                } else {
+                    silenceStart = null;
+                }
+            };
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            
+            if (turboModeCheckbox.checked && recognition) {
+                try { recognition.stop(); } catch(e) {}
+            } else if (mediaRecorder) {
+                try { mediaRecorder.stop(); } catch(e) {}
+            }
+            
+            isRecording = false;
+            micButton.style.background = '#6366f1';
+            micButton.style.transform = 'scale(1)';
+            micButton.classList.remove('pulse-active');
+            micButton.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
+            micText.innerText = 'Processing...';
+            statusIndicator.innerText = 'Thinking';
+            statusIndicator.style.color = '#f59e0b';
+        }
+
+        micButton.onclick = async () => {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        };
+
+        async function sendToAgentAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'input.wav');
+
+            try {
+                const response = await fetch(`/debug/voice-turn?callId=${callId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const transcript = decodeURIComponent(response.headers.get('X-Transcript') || '');
+                    const agentResponse = decodeURIComponent(response.headers.get('X-Response-Text') || '');
+                    const shouldEndCall = response.headers.get('X-End-Call') === 'true';
+                    const nextSkill = response.headers.get('X-Next-Skill');
+                    
+                    handleAgentResponse(response, transcript, agentResponse, shouldEndCall, nextSkill);
+                } else {
+                    micText.innerText = 'Error processing voice.';
+                    statusIndicator.innerText = 'Error';
+                }
+            } catch (err) {
+                console.error(err);
+                micText.innerText = 'Connection error.';
+                statusIndicator.innerText = 'Offline';
+            }
+        }
+
+        async function handleAgentResponse(response, transcript, agentResponseText, shouldEndCall, nextSkill) {
+            userText.innerText = transcript;
+            agentText.innerText = agentResponseText;
+            transcriptArea.style.display = 'block';
+            
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            isAgentSpeaking = true;
+            statusIndicator.innerText = 'Agent Speaking';
+            statusIndicator.style.color = '#34d399';
+            micText.innerText = 'Agent is responding...';
+
+            audio.onended = () => {
+                isAgentSpeaking = false;
+                if (shouldEndCall) {
+                    statusIndicator.innerText = 'Call Ended';
+                    statusIndicator.style.color = 'var(--text-muted)';
+                    micText.innerText = 'Call terminated by agent.';
+                    isLiveMode = false;
+                    liveModeCheckbox.checked = false;
+                    hangupButton.style.display = 'none';
+                } else {
+                    statusIndicator.innerText = 'Online';
+                    statusIndicator.style.color = '#10b981';
+                    if (isLiveMode) {
+                        setTimeout(startRecording, 500); 
+                    } else {
+                        micText.innerText = 'Click to speak again';
+                    }
+                }
+            };
+            audio.play();
+        }
+        // Real-time Event Feed Logic
+        const eventFeed = document.getElementById('event-feed');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const eventSocket = new WebSocket(`${wsProtocol}//${window.location.host}/ws/events`);
+
+        eventSocket.onmessage = (event) => {
+            const payload = jsonParseSafe(event.data);
+            if (!payload) return;
+
+            // Remove empty message if it's the first event
+            if (eventFeed.querySelector('div[style*="italic"]')) {
+                eventFeed.innerHTML = '';
+            }
+
+            const eventDiv = document.createElement('div');
+            eventDiv.style.cssText = `
+                padding: 12px 16px;
+                background: rgba(255,255,255,0.03);
+                border-left: 4px solid var(--primary);
+                border-radius: 4px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            let color = 'var(--primary)';
+            if (payload.type.includes('order')) color = 'var(--success)';
+            if (payload.type.includes('ticket')) color = 'var(--warning)';
+            eventDiv.style.borderLeftColor = color;
+
+            const time = new Date().toLocaleTimeString();
+            eventDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-weight: 600; color: ${color}; text-transform: uppercase; font-size: 0.75rem;">${payload.type.replace('_', ' ')}</span>
+                    <span style="color: var(--text-muted); font-size: 0.7rem;">${time}</span>
+                </div>
+                <div style="font-size: 0.9rem;">${formatEventData(payload.type, payload.data)}</div>
+            `;
+            
+            eventFeed.prepend(eventDiv);
+        };
+
+        function jsonParseSafe(data) {
+            try { return JSON.parse(data); }
+            catch(e) { return null; }
+        }
+
+        function formatEventData(type, data) {
+            if (type === 'order_placed') return `New Order <b style="color:#fff">${data.orderId}</b> placed for customer <span style="color:var(--primary)">${data.customer}</span> ($${data.amount})`;
+            if (type === 'order_cancelled') return `Order <b style="color:#fff">${data.orderId}</b> was successfully cancelled.`;
+            if (type === 'ticket_created') return `Support Ticket <b style="color:#fff">${data.ticketId}</b> created: <i>${data.subject}</i>`;
+            if (type === 'ticket_updated') return `Ticket <b style="color:#fff">${data.ticketId}</b> updated to status: <span style="color:var(--warning)">${data.status}</span>`;
+            if (type === 'crm_lookup') return `CRM Lookup for <span style="color:var(--primary)">${data.phone}</span>: Result <b>${data.result}</b> (${data.name})`;
+            return JSON.stringify(data);
+        }
+
+        // Render History Items
+        document.querySelectorAll('.event-item').forEach(item => {
+            const type = item.getAttribute('data-type');
+            const data = JSON.parse(item.getAttribute('data-payload'));
+            const timestamp = parseFloat(item.getAttribute('data-time'));
+            
+            let color = 'var(--primary)';
+            if (type.includes('order')) color = 'var(--success)';
+            if (type.includes('ticket')) color = 'var(--warning)';
+            
+            const timeStr = new Date(timestamp * 1000).toLocaleTimeString();
+            
+            item.style.cssText = `
+                padding: 12px 16px;
+                background: rgba(255,255,255,0.03);
+                border-left: 4px solid ${color};
+                border-radius: 4px;
+            `;
+            
+            item.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-weight: 600; color: ${color}; text-transform: uppercase; font-size: 0.75rem;">${type.replace('_', ' ')}</span>
+                    <span style="color: var(--text-muted); font-size: 0.7rem;">${timeStr}</span>
+                </div>
+                <div style="font-size: 0.9rem;">${formatEventData(type, data)}</div>
+            `;
+        });
+
+        // Add slide-in animation
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes slideIn {
+                from { opacity: 0; transform: translateX(-10px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
 </body>
 </html>

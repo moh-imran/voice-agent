@@ -1,3 +1,4 @@
+import os
 import yaml
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -34,4 +35,12 @@ class AppConfig(BaseModel):
 def load_config(file_path: str) -> AppConfig:
     with open(file_path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
-    return AppConfig(**data)
+    
+    config = AppConfig(**data)
+    
+    # Environment Variable Overrides
+    env_redis = os.getenv("REDIS_URL")
+    if env_redis:
+        config.redis.url = env_redis
+        
+    return config

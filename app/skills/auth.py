@@ -13,15 +13,24 @@ class AuthSkill(SkillPlugin):
         return ["authenticate", "login"]
 
     def canHandle(self, intent: IntentResult) -> bool:
-        return intent.intent in self.getIntents() or intent.intent == "unknown"
+        # If it's a numeric input (OTP or Phone), AuthSkill should handle it
+        has_digits = any(char.isdigit() for char in intent.raw)
+        return intent.intent in self.getIntents() or intent.intent == "unknown" or has_digits
 
-    async def execute(self, context: ConversationContext) -> SkillResponse:
-        last_turn = context.turnHistory[-1]["content"] if context.turnHistory else ""
+    async def execute(self, context: ConversationContext, intent: IntentResult) -> SkillResponse:
+        utterance = intent.raw
 
         # Step 1: Ask for phone number
         if "auth_phone" not in context.entities:
             # Extract phone from intent if available
-            phone = context.entities.get("phone")
+            phone = intent.entities.get("phone")
+            
+            # Heuristic fallback if LLM missed it: look for 10+ digits in the utterance
+            if not phone:
+                digits = "".join(filter(str.isdigit, utterance))
+                if len(digits) >= 10:
+                    phone = digits
+
             if phone:
                 return SkillResponse(
                     text=f"Thank you. I've sent an OTP to {phone}. Please read it back to me.",
@@ -29,7 +38,6 @@ class AuthSkill(SkillPlugin):
                     sessionPatch={"entities": {"auth_phone": phone}}
                 )
             
-            # Simple regex/heuristic could go here in real life, but we rely on LLM entity extraction
             return SkillResponse(
                 text="To assist you better, could you please provide your phone number?",
                 nextSkill="auth",
@@ -39,12 +47,17 @@ class AuthSkill(SkillPlugin):
         # Step 2: Ask for OTP
         if "auth_otp" not in context.entities:
             # Assuming any 4 digit number they say is the OTP for this mock
-            otp = context.entities.get("otp") or "".join(filter(str.isdigit, last_turn))
+            otp = intent.entities.get("otp") or "".join(filter(str.isdigit, utterance))
             
             if len(otp) >= 4:
                 # OTP provided, verify and login
                 phone = context.entities["auth_phone"]
-                crm = self.registry.resolve_crm("salesforce") # or from config
+                # Resolve whichever CRM is registered
+                crms = self.registry.get_all_crms()
+                crm = crms[0] if crms else None
+                
+                if not crm:
+                    raise ValueError("No CRM adapter registered")
                 
                 customer = await crm.searchCustomer(phone)
                 

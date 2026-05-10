@@ -12,6 +12,7 @@ class FAQSkill(SkillPlugin):
         
         # Mock Knowledge Base Context
         self.kb_context = """
+        Agent Identity: Your name is Congni. You are a professional AI voice assistant for this store.
         Store Hours: Monday to Friday 9 AM to 8 PM. Weekends 10 AM to 5 PM.
         Return Policy: Items can be returned within 30 days of receipt if unopened.
         Shipping: Standard shipping takes 3-5 business days. Express takes 1-2 days.
@@ -24,8 +25,8 @@ class FAQSkill(SkillPlugin):
     def canHandle(self, intent: IntentResult) -> bool:
         return intent.intent in self.getIntents()
 
-    async def execute(self, context: ConversationContext) -> SkillResponse:
-        question = context.turnHistory[-1]["content"] if context.turnHistory else ""
+    async def execute(self, context: ConversationContext, intent: IntentResult) -> SkillResponse:
+        question = intent.raw
 
         prompt = f"""
 You are answering a customer's question based ONLY on the knowledge base below.

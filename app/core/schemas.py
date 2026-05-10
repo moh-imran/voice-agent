@@ -83,3 +83,4 @@ class ConversationContext(BaseModel):
     turnHistory: List[Dict[str, str]]
     authState: str
     customerId: Optional[str] = None
+    activeSkill: Optional[str] = None

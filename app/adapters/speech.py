@@ -1,25 +1,49 @@
+import os
+import tempfile
 from typing import AsyncIterable, Optional
+from openai import AsyncOpenAI
 from app.core.interfaces import SpeechAdapter
 from app.core.schemas import AudioChunk
 
-# Note: In a real implementation we would import the official openai Python sdk 
-# or deepgram python sdk and implement the actual logic here as we did in TS.
-# Since we proved it in TS and are re-scaffolding in Python, I'll provide the mocked interfaces.
-
 class WhisperAdapter(SpeechAdapter):
     def __init__(self, api_key: str):
-        self.api_key = api_key
+        self.client = AsyncOpenAI(api_key=api_key)
 
     async def transcribe(self, audioStream: AsyncIterable[AudioChunk], lang: Optional[str] = None) -> dict:
-        print(f"[Whisper] Transcribing chunk...")
-        return {"text": "mock transcript", "language": lang or "en", "confidence": 0.95}
+        # Buffer the stream into a temporary file
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp_path = tmp.name
+            async for chunk in audioStream:
+                tmp.write(chunk.data)
+        
+        try:
+            with open(tmp_path, "rb") as audio_file:
+                transcript = await self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language=lang[:2] if lang else None # OpenAI expects 2-char code often
+                )
+            return {
+                "text": transcript.text,
+                "language": lang or "en",
+                "confidence": 1.0
+            }
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     async def detectLanguage(self, audioStream: AsyncIterable[AudioChunk]) -> dict:
+        # Simplified: transcription can also return language
         return {"language": "en", "confidence": 0.9}
 
-    async def synthesize(self, text: str, voiceId: str) -> bytes:
-        print(f"[Whisper] Synthesizing: {text}")
-        return b'mock_audio_data'
+    async def synthesize(self, text: str, voiceId: str = "nova") -> bytes:
+        response = await self.client.audio.speech.create(
+            model="tts-1",
+            voice=voiceId if voiceId in ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] else "nova",
+            input=text
+        )
+        # Convert to bytes
+        return await response.aread()
 
 class DeepgramAdapter(SpeechAdapter):
     def __init__(self, api_key: str):

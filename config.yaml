@@ -1,7 +1,7 @@
 telephony: twilio
 speech: whisper
-crm: salesforce
-commerce: magento
+crm: hubspot
+commerce: shopify
 ticketing: zendesk
 
 languages:
@@ -13,12 +13,12 @@ languages:
     promptTemplate: system.en-US
 
 llm:
-  model: gpt-4o
+  model: gpt-4o-mini
   max_tokens: 1000
-  temperature: 0.3
+  temperature: 0.1
 
 redis:
-  url: redis://localhost:6379
+  url: redis://redis:6379
 
 skills: 
   - auth
