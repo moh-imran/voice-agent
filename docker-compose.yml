@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     image: ghcr.io/moh-imran/voice-agent-api:latest

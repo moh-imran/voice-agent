@@ -31,11 +31,16 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: OPENAI_API_KEY,GHCR_TOKEN
           script: |
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             mkdir -p ~/voice-agent
             cd ~/voice-agent
+
+            # Create .env file from secrets
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
+            # Add other secrets here as needed
             
             docker compose pull
             docker compose up -d
