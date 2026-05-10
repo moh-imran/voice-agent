@@ -2,23 +2,19 @@ version: '3.8'
 
 services:
   api:
-    build: .
+    image: ghcr.io/moh-imran/voice-agent-api:latest
     container_name: voice-agent-api
     ports:
       - "3000:3000"
     environment:
       - REDIS_URL=redis://redis:6379
-      - ENVIRONMENT=development
+      - ENVIRONMENT=production
       - PYTHONUNBUFFERED=1
-    command: uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 3000
     env_file:
       - .env
     depends_on:
       - redis
-    volumes:
-      - ./app:/app/app
-      - ./config.yaml:/app/config.yaml
-      - ./.env:/app/.env
     restart: unless-stopped
 
   redis:
