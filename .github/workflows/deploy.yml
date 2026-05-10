@@ -23,7 +23,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "docker-compose.yml"
-          target: "~/voice-agent/"
+          target: "/home/deploy/voice-agent/"
 
       - name: SSH & Deploy
         uses: appleboy/ssh-action@v0.1.6
@@ -35,12 +35,11 @@ jobs:
           script: |
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            mkdir -p ~/voice-agent
-            cd ~/voice-agent
+            mkdir -p /home/deploy/voice-agent
+            cd /home/deploy/voice-agent
 
             # Create .env file from secrets
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-            # Add other secrets here as needed
             
             docker compose pull
             docker compose up -d
